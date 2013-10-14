@@ -27,24 +27,25 @@ public class MinimalistsRemoteServer {
 			this._server = new java.net.ServerSocket(iPortNumber);
 			System.console().writer().println();
 			System.console().writer().println("Listening on port: " + iPortNumber);
-			while(_bRun){
-				java.net.Socket newSocket = this._server.accept();
-				while(newSocket.isConnected() && this._bRun){
-					newSocket.getInputStream().read(this._buffer);
-					this._event = (int)this._buffer[0];
-					this._key = ((this._buffer[1]<<24) | 
-							(this._buffer[2]<<16) | 
-							(this._buffer[3]<<8) | 
-							(this._buffer[4])
-							);
-					
-					this._key = Protocol(this._key);
-					if(this._event == MinimalistsRemoteServer._eventType) TypeKey(this._key);
-					if(this._event == MinimalistsRemoteServer._eventPress) this._robot.keyPress(this._key);
-					if(this._event == MinimalistsRemoteServer._eventRelease) this._robot.keyRelease(this._key);
-					if(this._event == MinimalistsRemoteServer._eventExit) this._bRun = false;
-				}
+			java.net.Socket newSocket = this._server.accept();
+			System.console().writer().println("Socket connected");
+			while(_bRun){				
+				newSocket.getInputStream().read(this._buffer);
+				this._event = (int)this._buffer[0];
+				this._key = ((this._buffer[1]<<24) | 
+						(this._buffer[2]<<16) | 
+						(this._buffer[3]<<8) | 
+						(this._buffer[4])
+						);
+				
+				this._key = Protocol(this._key);
+				if(this._event == MinimalistsRemoteServer._eventType) TypeKey(this._key);
+				if(this._event == MinimalistsRemoteServer._eventPress) this._robot.keyPress(this._key);
+				if(this._event == MinimalistsRemoteServer._eventRelease) this._robot.keyRelease(this._key);
+				if(this._event == MinimalistsRemoteServer._eventExit) this._bRun = false;				
 			}
+			newSocket.close();
+			this._server.close();
 		}catch(Exception ex){
 			ex.printStackTrace();
 		}
@@ -91,7 +92,7 @@ public class MinimalistsRemoteServer {
 	private int Protocol(int protocolCode){
 		int keyCode = 0;
 		
-		switch(protocolCode){
+		switch(protocolCode){		
 		case(0): keyCode = KeyEvent.VK_0; break;
 		case(1): keyCode = KeyEvent.VK_1; break;
 		case(2): keyCode = KeyEvent.VK_2; break;
@@ -127,6 +128,8 @@ public class MinimalistsRemoteServer {
 		case(32): keyCode = KeyEvent.VK_F22; break;
 		case(33): keyCode = KeyEvent.VK_F23; break;
 		case(34): keyCode = KeyEvent.VK_F24; break;
+		case(35): keyCode = KeyEvent.VK_LEFT; break;
+		case(36): keyCode = KeyEvent.VK_RIGHT; break;
 		
 		default: keyCode = protocolCode;
 		}
