@@ -16,10 +16,7 @@ public class MinimalistsRemoteServer {
 	private static int _eventPress = 1;
 	private static int _eventRelease = 2;
 	private static int _eventType = 3;
-	private static int _eventExit = -1;
-	private byte[] _buffer = new byte[5];
-	
-	private boolean _bRun = true;
+	private byte[] _buffer = new byte[4];
 	
 	public MinimalistsRemoteServer(int iPortNumber) {
 		try{
@@ -27,25 +24,24 @@ public class MinimalistsRemoteServer {
 			this._server = new java.net.ServerSocket(iPortNumber);
 			System.console().writer().println();
 			System.console().writer().println("Listening on port: " + iPortNumber);
-			java.net.Socket newSocket = this._server.accept();
-			System.console().writer().println("Socket connected");
-			while(_bRun){				
-				newSocket.getInputStream().read(this._buffer);
-				this._event = (int)this._buffer[0];
-				this._key = ((this._buffer[1]<<24) | 
-						(this._buffer[2]<<16) | 
-						(this._buffer[3]<<8) | 
-						(this._buffer[4])
-						);
-				
-				this._key = Protocol(this._key);
-				if(this._event == MinimalistsRemoteServer._eventType) TypeKey(this._key);
-				if(this._event == MinimalistsRemoteServer._eventPress) this._robot.keyPress(this._key);
-				if(this._event == MinimalistsRemoteServer._eventRelease) this._robot.keyRelease(this._key);
-				if(this._event == MinimalistsRemoteServer._eventExit) this._bRun = false;				
-			}
-			newSocket.close();
-			this._server.close();
+			
+			while(true){
+				java.net.Socket newSocket = this._server.accept();
+				System.console().writer().println("Socket connected");
+				while((this._event = newSocket.getInputStream().read()) != -1){
+					newSocket.getInputStream().read(this._buffer);
+					this._key = ((this._buffer[0]<<24) | 
+							(this._buffer[1]<<16) | 
+							(this._buffer[2]<<8) | 
+							(this._buffer[3])
+							);				
+					this._key = Protocol(this._key);
+					if(this._event == MinimalistsRemoteServer._eventType) TypeKey(this._key);
+					if(this._event == MinimalistsRemoteServer._eventPress) this._robot.keyPress(this._key);
+					if(this._event == MinimalistsRemoteServer._eventRelease) this._robot.keyRelease(this._key);				
+				}
+				newSocket.close();
+			}			
 		}catch(Exception ex){
 			ex.printStackTrace();
 		}
